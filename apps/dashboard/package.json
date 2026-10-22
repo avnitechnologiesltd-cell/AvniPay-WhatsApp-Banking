@@ -1,0 +1,21 @@
+{
+  "name": "@avni/dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev --port ${DASHBOARD_PORT:-3003}",
+    "start": "next start --port ${DASHBOARD_PORT:-3003}",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@avni/config": "workspace:*",
+    "next": "^15.1.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.7",
+    "@types/react-dom": "^19.0.3"
+  }
+}

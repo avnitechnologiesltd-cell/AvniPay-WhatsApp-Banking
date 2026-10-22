@@ -1,0 +1,14 @@
+{
+  "name": "@avni/platform-support",
+  "version": "0.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc --build"
+  },
+  "dependencies": {
+    "@avni/config": "workspace:*",
+    "@nestjs/common": "^11.0.1"
+  }
+}

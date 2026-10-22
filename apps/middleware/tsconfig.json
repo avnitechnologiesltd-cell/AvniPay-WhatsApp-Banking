@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  // `.json` explicitly: a composite project must list every input file, and
+  // `src/**/*` alone does not pick up JSON even with `resolveJsonModule`. The
+  // NIBSS bank list is an input, and it is emitted into `dist` beside the code
+  // that reads it — which is what the runtime image copies.
+  "include": ["src/**/*", "src/**/*.json"],
+  "exclude": ["src/**/*.test.ts"],
+  "references": [
+    { "path": "../../packages/config" },
+    { "path": "../../packages/db" },
+    { "path": "../../packages/intent" },
+    { "path": "../../packages/service" }
+  ]
+}

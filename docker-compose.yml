@@ -1,0 +1,215 @@
+# One VM running Docker Compose is the supported topology: three containers plus
+# Postgres in one file. Compose to Kubernetes is a migration; Kubernetes down to
+# a VM is a rewrite.
+#
+#   1. cp .env.example .env  and fill it in
+#   2. docker compose run --rm migrate                 <- explicit, not part of step 4
+#   3. docker compose run --rm setup-administrator     <- the first Administrator
+#   4. docker compose up -d
+#
+# Steps 2 and 3 are deliberately not wired into step 4. A deployable started
+# against an un-migrated database refuses to serve and says so; it never migrates
+# itself. And a deployment that makes an account on its own is reachable with a
+# known password until somebody notices.
+#
+# The whole procedure — releasing, rolling back, rotating a credential, what
+# staging cannot show you — is docs/runbook.md.
+
+x-node-service: &node-service
+  build:
+    context: .
+    dockerfile: Dockerfile
+  env_file: .env
+  restart: unless-stopped
+  depends_on:
+    postgres:
+      condition: service_healthy
+  volumes:
+    # Key material is mounted, never baked into an image and never in `.env`,
+    # which holds the paths instead.
+    - ./secrets:/repo/secrets:ro
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-avni}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-avni}
+      POSTGRES_DB: ${POSTGRES_DB:-avni}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-avni} -d ${POSTGRES_DB:-avni}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  # Object storage for the files Customers send — a photographed receipt is
+  # ordinary support, and a document handed to the layer running the LLM is an
+  # injection vector with a file extension. So the bytes live here: the Platform
+  # writes and only the Dashboard, through the Middleware, reads.
+  #
+  # MinIO in development because it speaks S3 and runs on the same VM. The Bank
+  # may point ATTACHMENT_STORE_ENDPOINT at whatever they run instead; nothing in
+  # the platform knows the difference.
+  #
+  # **The two credentials must be separate and asymmetric in production**: the
+  # Platform's key write-only against this bucket and the Middleware's key
+  # read-only. Compose cannot express a bucket policy, so this file gives both
+  # deployables the root credential and the split is enforced in code by the
+  # types they are handed (`ObjectWriter` and `ObjectReader`). Making it true at
+  # the bucket as well is on the release ticket.
+  minio:
+    image: minio/minio:RELEASE.2024-12-18T13-15-44Z
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-avni}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-avni-object-store}
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  # The release step, run by whoever holds production access. Behind a profile so
+  # that `docker compose up` cannot reach it: auto-migrate-on-startup is what
+  # turns a bad deploy into a bad database, and this one holds hashed
+  # Transaction PINs and every Binding.
+  #
+  #   docker compose run --rm migrate
+  #
+  # Forward-only. A failed release rolls back by redeploying the previous image;
+  # there is no reverse migration to write.
+  #
+  # It also applies the grants, after the migrations and every time it runs: it
+  # creates the `MIDDLEWARE_DATABASE_URL` and `PLATFORM_DATABASE_URL` roles, sets
+  # their passwords from those URLs, and denies the Platform every table the
+  # Middleware holds. Every time, because a table a release just created is a
+  # table that needs granting on. It refuses to run at all if the three database
+  # URLs do not name three different logins — three keys pointing at one login
+  # are exactly as reachable as one key, and ADR-0006 wants that enforced rather
+  # than intended.
+  #
+  # `DATABASE_URL` therefore names a login that owns the database and schema
+  # `public` and may CREATE ROLE — which the `postgres` service's own
+  # `POSTGRES_USER` is.
+  migrate:
+    <<: *node-service
+    # Literally the Middleware's image, under the same tag, with a different
+    # command. Not a second image that resembles it.
+    #
+    # This matters more than it looks. A `migrate` service with its own build
+    # target is skipped by `docker compose build`, because it sits behind a
+    # profile — so the operator gets a migrator built from an older tree, which
+    # applies nothing, reports success, and leaves the deployables refusing to
+    # start against a schema that was never created.
+    image: avni/middleware:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: middleware
+    command: ["node", "packages/db/dist/cli.js"]
+    profiles: ["release"]
+    restart: "no"
+
+  # Creates the first Administrator. Behind the same profile as `migrate`, and
+  # for the same reason: a deployment that makes an account on its own is a
+  # deployment reachable with a known password until somebody notices.
+  #
+  #   docker compose run --rm setup-administrator
+  #
+  # It declines if any account already exists. Everybody after the first is
+  # invited from the Dashboard.
+  setup-administrator:
+    <<: *node-service
+    image: avni/middleware:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: middleware
+    command: ["node", "apps/middleware/dist/staff/setup-cli.js"]
+    profiles: ["release"]
+    restart: "no"
+    stdin_open: true
+    tty: true
+
+  middleware:
+    <<: *node-service
+    image: avni/middleware:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: middleware
+    ports:
+      - "${MIDDLEWARE_PORT:-3001}:${MIDDLEWARE_PORT:-3001}"
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - >-
+          fetch('http://127.0.0.1:' + (process.env.MIDDLEWARE_PORT || 3001) + '/health')
+          .then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
+  platform:
+    <<: *node-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: platform
+    ports:
+      - "${PLATFORM_PORT:-3002}:${PLATFORM_PORT:-3002}"
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - >-
+          fetch('http://127.0.0.1:' + (process.env.PLATFORM_PORT || 3002) + '/health')
+          .then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dashboard
+    env_file: .env
+    restart: unless-stopped
+    depends_on:
+      - middleware
+      - platform
+    ports:
+      - "${DASHBOARD_PORT:-3003}:${DASHBOARD_PORT:-3003}"
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - >-
+          fetch('http://127.0.0.1:' + (process.env.DASHBOARD_PORT || 3003) + '/api/health')
+          .then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
+volumes:
+  postgres-data:
+  minio-data:

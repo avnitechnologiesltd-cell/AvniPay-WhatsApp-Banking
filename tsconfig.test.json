@@ -1,0 +1,29 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "noEmit": true,
+    "types": ["node", "vitest/globals"],
+    "baseUrl": ".",
+    "paths": {
+      "@avni/config": ["packages/config/src/index.ts"],
+      "@avni/db": ["packages/db/src/index.ts"],
+      "@avni/fakes": ["packages/fakes/src/index.ts"],
+      "@avni/intent": ["packages/intent/src/index.ts"],
+      "@avni/service": ["packages/service/src/index.ts"],
+      "@avni/platform-channels": ["packages/platform-channels/src/index.ts"],
+      "@avni/platform-orchestration": ["packages/platform-orchestration/src/index.ts"],
+      "@avni/platform-support": ["packages/platform-support/src/index.ts"],
+      "@avni/middleware": ["apps/middleware/src/index.ts"],
+      "@avni/platform": ["apps/platform/src/index.ts"]
+    }
+  },
+  "include": [
+    "vitest.config.ts",
+    "tests/**/*.ts",
+    "apps/*/src/**/*.test.ts",
+    "packages/*/src/**/*.test.ts"
+  ]
+}

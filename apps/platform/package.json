@@ -1,0 +1,28 @@
+{
+  "name": "@avni/platform",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc --build",
+    "start": "node dist/main.js"
+  },
+  "dependencies": {
+    "@avni/config": "workspace:*",
+    "@avni/db": "workspace:*",
+    "@avni/intent": "workspace:*",
+    "@avni/platform-channels": "workspace:*",
+    "@avni/platform-orchestration": "workspace:*",
+    "@avni/platform-support": "workspace:*",
+    "@avni/service": "workspace:*",
+    "@nestjs/common": "^11.0.1",
+    "@nestjs/core": "^11.0.1",
+    "@nestjs/platform-express": "^11.0.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@avni/fakes": "workspace:*"
+  }
+}

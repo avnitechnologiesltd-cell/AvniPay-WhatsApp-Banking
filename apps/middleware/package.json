@@ -1,0 +1,29 @@
+{
+  "name": "@avni/middleware",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc --build",
+    "start": "node dist/main.js"
+  },
+  "dependencies": {
+    "@avni/config": "workspace:*",
+    "@avni/db": "workspace:*",
+    "@avni/intent": "workspace:*",
+    "@avni/service": "workspace:*",
+    "@nestjs/common": "^11.0.1",
+    "@nestjs/core": "^11.0.1",
+    "@nestjs/platform-express": "^11.0.1",
+    "@node-rs/argon2": "^2.0.2",
+    "pdfjs-dist": "^6.2.108",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@avni/fakes": "workspace:*",
+    "@types/express": "^5.0.0"
+  }
+}

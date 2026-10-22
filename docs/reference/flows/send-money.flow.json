@@ -1,0 +1,434 @@
+{
+  "version": "7.3",
+  "data_api_version": "3.0",
+  "routing_model": {
+    "RECIPIENT": [
+      "CONFIRM",
+      "DONE",
+      "LOCKED",
+      "UNAVAILABLE"
+    ],
+    "CONFIRM": [
+      "DONE",
+      "LOCKED",
+      "UNAVAILABLE"
+    ],
+    "DONE": [],
+    "LOCKED": [],
+    "UNAVAILABLE": []
+  },
+  "screens": [
+    {
+      "id": "RECIPIENT",
+      "title": "Who are you paying?",
+      "data": {
+        "purpose": {
+          "type": "string",
+          "__example__": "pay"
+        },
+        "beneficiaries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              }
+            }
+          },
+          "__example__": [
+            {
+              "id": "b1",
+              "title": "Musa",
+              "description": "MUSA ADEYEMI \u00b7 Access Bank \u2022\u2022\u2022\u20225678"
+            }
+          ]
+        },
+        "amount": {
+          "type": "string",
+          "__example__": ""
+        },
+        "error_message": {
+          "type": "string",
+          "__example__": ""
+        },
+        "has_purpose": {
+          "type": "boolean",
+          "__example__": false
+        },
+        "has_beneficiaries": {
+          "type": "boolean",
+          "__example__": false
+        },
+        "has_amount": {
+          "type": "boolean",
+          "__example__": false
+        },
+        "has_error_message": {
+          "type": "boolean",
+          "__example__": false
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextBody",
+            "text": "${data.amount}",
+            "visible": "${data.has_amount}"
+          },
+          {
+            "type": "TextCaption",
+            "text": "${data.error_message}",
+            "visible": "${data.has_error_message}"
+          },
+          {
+            "type": "Form",
+            "name": "recipient_form",
+            "children": [
+              {
+                "type": "RadioButtonsGroup",
+                "name": "beneficiary_id",
+                "label": "Someone you have paid before",
+                "required": false,
+                "data-source": "${data.beneficiaries}",
+                "visible": "${data.has_beneficiaries}"
+              },
+              {
+                "type": "TextInput",
+                "name": "account_number",
+                "label": "Or an account number",
+                "input-type": "number",
+                "required": false,
+                "helper-text": "10 digits"
+              },
+              {
+                "type": "TextInput",
+                "name": "bank_name",
+                "label": "Bank",
+                "input-type": "text",
+                "required": false
+              },
+              {
+                "type": "Footer",
+                "label": "Continue",
+                "on-click-action": {
+                  "name": "data_exchange",
+                  "payload": {
+                    "beneficiary_id": "${form.beneficiary_id}",
+                    "account_number": "${form.account_number}",
+                    "bank_name": "${form.bank_name}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "CONFIRM",
+      "title": "Confirm",
+      "data": {
+        "amount": {
+          "type": "string",
+          "__example__": "\u20a65,000.00"
+        },
+        "destination_name": {
+          "type": "string",
+          "__example__": "MUSA ADEYEMI"
+        },
+        "destination_account": {
+          "type": "string",
+          "__example__": "2123455678"
+        },
+        "destination_bank": {
+          "type": "string",
+          "__example__": "Access Bank"
+        },
+        "source_account": {
+          "type": "string",
+          "__example__": "2024000153"
+        },
+        "fee_note": {
+          "type": "string",
+          "__example__": "Fees apply per your account tariff."
+        },
+        "action": {
+          "type": "string",
+          "__example__": ""
+        },
+        "details": {
+          "type": "string",
+          "__example__": ""
+        },
+        "pin_action": {
+          "type": "string",
+          "__example__": ""
+        },
+        "pin_note": {
+          "type": "string",
+          "__example__": "Enter your Transaction PIN."
+        },
+        "name_changed": {
+          "type": "string",
+          "__example__": ""
+        },
+        "error_message": {
+          "type": "string",
+          "__example__": ""
+        },
+        "has_amount": {
+          "type": "boolean",
+          "__example__": false
+        },
+        "has_destination_name": {
+          "type": "boolean",
+          "__example__": false
+        },
+        "has_destination_account": {
+          "type": "boolean",
+          "__example__": false
+        },
+        "has_destination_bank": {
+          "type": "boolean",
+          "__example__": false
+        },
+        "has_source_account": {
+          "type": "boolean",
+          "__example__": false
+        },
+        "has_fee_note": {
+          "type": "boolean",
+          "__example__": false
+        },
+        "has_action": {
+          "type": "boolean",
+          "__example__": false
+        },
+        "has_details": {
+          "type": "boolean",
+          "__example__": false
+        },
+        "has_pin_action": {
+          "type": "boolean",
+          "__example__": false
+        },
+        "has_pin_note": {
+          "type": "boolean",
+          "__example__": false
+        },
+        "has_name_changed": {
+          "type": "boolean",
+          "__example__": false
+        },
+        "has_error_message": {
+          "type": "boolean",
+          "__example__": false
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextHeading",
+            "text": "${data.amount}",
+            "visible": "${data.has_amount}"
+          },
+          {
+            "type": "TextBody",
+            "text": "${data.destination_name}",
+            "visible": "${data.has_destination_name}"
+          },
+          {
+            "type": "TextCaption",
+            "text": "${data.destination_bank}",
+            "visible": "${data.has_destination_bank}"
+          },
+          {
+            "type": "TextCaption",
+            "text": "${data.destination_account}",
+            "visible": "${data.has_destination_account}"
+          },
+          {
+            "type": "TextCaption",
+            "text": "${data.source_account}",
+            "visible": "${data.has_source_account}"
+          },
+          {
+            "type": "TextCaption",
+            "text": "${data.fee_note}",
+            "visible": "${data.has_fee_note}"
+          },
+          {
+            "type": "TextHeading",
+            "text": "${data.action}",
+            "visible": "${data.has_action}"
+          },
+          {
+            "type": "TextBody",
+            "text": "${data.details}",
+            "visible": "${data.has_details}"
+          },
+          {
+            "type": "TextBody",
+            "text": "${data.name_changed}",
+            "visible": "${data.has_name_changed}"
+          },
+          {
+            "type": "TextCaption",
+            "text": "${data.error_message}",
+            "visible": "${data.has_error_message}"
+          },
+          {
+            "type": "Form",
+            "name": "confirm_form",
+            "children": [
+              {
+                "type": "TextBody",
+                "text": "${data.pin_note}",
+                "visible": "${data.has_pin_note}"
+              },
+              {
+                "type": "TextInput",
+                "name": "pin",
+                "label": "Transaction PIN",
+                "input-type": "password",
+                "required": true
+              },
+              {
+                "type": "TextInput",
+                "name": "pin_confirmation",
+                "label": "Enter the PIN again",
+                "input-type": "password",
+                "required": false,
+                "visible": "${data.has_pin_action}"
+              },
+              {
+                "type": "TextInput",
+                "name": "save_as",
+                "label": "Save this recipient as (optional)",
+                "input-type": "text",
+                "required": false
+              },
+              {
+                "type": "Footer",
+                "label": "Authorise",
+                "on-click-action": {
+                  "name": "data_exchange",
+                  "payload": {
+                    "pin": "${form.pin}",
+                    "pin_confirmation": "${form.pin_confirmation}",
+                    "save_as": "${form.save_as}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "DONE",
+      "title": "Done",
+      "terminal": true,
+      "data": {
+        "message": {
+          "type": "string",
+          "__example__": "Sent."
+        },
+        "has_message": {
+          "type": "boolean",
+          "__example__": false
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextBody",
+            "text": "${data.message}"
+          },
+          {
+            "type": "Footer",
+            "label": "Close",
+            "on-click-action": {
+              "name": "complete",
+              "payload": {}
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "LOCKED",
+      "title": "Too many attempts",
+      "terminal": true,
+      "data": {
+        "message": {
+          "type": "string",
+          "__example__": "Too many attempts. Please try again in an hour."
+        },
+        "has_message": {
+          "type": "boolean",
+          "__example__": false
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextBody",
+            "text": "${data.message}"
+          },
+          {
+            "type": "Footer",
+            "label": "Close",
+            "on-click-action": {
+              "name": "complete",
+              "payload": {}
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "UNAVAILABLE",
+      "title": "Not available",
+      "terminal": true,
+      "data": {
+        "message": {
+          "type": "string",
+          "__example__": "We cannot do that just now. Please try again shortly."
+        },
+        "has_message": {
+          "type": "boolean",
+          "__example__": false
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextBody",
+            "text": "${data.message}"
+          },
+          {
+            "type": "Footer",
+            "label": "Close",
+            "on-click-action": {
+              "name": "complete",
+              "payload": {}
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

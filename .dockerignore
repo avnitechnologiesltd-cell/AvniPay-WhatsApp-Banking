@@ -1,0 +1,16 @@
+**/node_modules
+**/dist
+**/.next
+**/*.tsbuildinfo
+.git
+.scratch
+.env
+.env.*
+!.env.example
+secrets
+*.pem
+*.key
+docs
+tests
+**/*.test.ts
+**/*.test.tsx

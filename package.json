@@ -1,0 +1,25 @@
+{
+  "name": "avni",
+  "private": true,
+  "description": "Conversational banking and AI customer support for microfinance banks on BankOne, over WhatsApp and in-app chat.",
+  "license": "Apache-2.0",
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "build": "tsc --build && pnpm --filter @avni/dashboard run build",
+    "typecheck": "tsc --build && tsc -p tsconfig.test.json && pnpm --filter @avni/dashboard run typecheck",
+    "clean": "tsc --build --clean",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "migrate": "pnpm --filter @avni/db run migrate",
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose down"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
+  }
+}

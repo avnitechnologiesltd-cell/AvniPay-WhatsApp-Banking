@@ -1,0 +1,43 @@
+-- What an **inter-bank** Mandate needs beyond an intra-bank one.
+--
+-- `0005` said v1 maintained no NIBSS bank-code list. It does now — the
+-- Middleware keeps one, because an Intent carries the bank as a *name* and
+-- `Transfer/InterBankTransfer` needs a code. `destination_bank_code` is
+-- unchanged by that: it was always the code the transfer was actually sent
+-- under, and it is still resolved before the row is written.
+--
+-- The route itself needs no column. It is decided from `destination_bank_code`
+-- against the Bank's own code in configuration — which is the same comparison
+-- the Middleware made when it wrote the row, so a Mandate authorised three hours
+-- later is dispatched down the endpoint it was proposed for, without anything
+-- having to be remembered about *which kind* of transfer it was.
+--
+-- Both columns below exist because `Transfer/InterBankTransfer` requires a field
+-- that `LocalFundsTransfer` does not, and because that field must be resolved
+-- **before** the Confirmation screen rather than at the moment of dispatch: a
+-- transfer that cannot be built is a Customer who should be told so before they
+-- enter a PIN, not after.
+--
+-- Additive-first: this migration only adds nullable columns, so the previous
+-- image still serves this schema.
+
+-- `Payer`. The sending account's name as this Bank reports it, from a name
+-- enquiry on the Customer's own account. It is stored rather than composed
+-- because NIP carries it to the other bank and it is **what the recipient's
+-- statement will show** — a description this platform invented would be this
+-- platform deciding what a Customer is called to somebody they are paying.
+--
+-- Null on every intra-bank Mandate, which needs no payer name and pays nothing
+-- to fetch one.
+alter table mandates add column payer_name text;
+
+-- `ReceiverKYC`, where the interbank name enquiry reported one.
+--
+-- Null is the common case and is not a gap: BankOne documents the field as
+-- nullable, and the adapter sends the lowest tier when it has nothing, which is
+-- the direction that can only tighten a limit rather than loosen one.
+--
+-- The recipient's **BVN is deliberately not here**, though the same enquiry
+-- returns it. It is optional to the transfer and it is a national identifier
+-- belonging to somebody who is not this Bank's Customer.
+alter table mandates add column destination_kyc text;

@@ -1,0 +1,356 @@
+{
+  "version": "7.3",
+  "data_api_version": "3.0",
+  "routing_model": {
+    "IDENTIFY": [
+      "CHOOSE_DESTINATION",
+      "LOCKED",
+      "UNAVAILABLE"
+    ],
+    "CHOOSE_DESTINATION": [
+      "CODE",
+      "LOCKED",
+      "UNAVAILABLE"
+    ],
+    "CODE": [
+      "SET_PIN",
+      "DONE",
+      "LOCKED",
+      "UNAVAILABLE"
+    ],
+    "SET_PIN": [
+      "DONE",
+      "LOCKED",
+      "UNAVAILABLE"
+    ],
+    "DONE": [],
+    "LOCKED": [],
+    "UNAVAILABLE": []
+  },
+  "screens": [
+    {
+      "id": "IDENTIFY",
+      "title": "Link your account",
+      "data": {
+        "error_message": {
+          "type": "string",
+          "__example__": ""
+        },
+        "has_error_message": {
+          "type": "boolean",
+          "__example__": false
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextBody",
+            "text": "Enter the account number you hold with the bank."
+          },
+          {
+            "type": "TextCaption",
+            "text": "${data.error_message}",
+            "visible": "${data.has_error_message}"
+          },
+          {
+            "type": "Form",
+            "name": "identify_form",
+            "children": [
+              {
+                "type": "TextInput",
+                "name": "account_number",
+                "label": "Account number",
+                "input-type": "number",
+                "required": true,
+                "helper-text": "10 digits"
+              },
+              {
+                "type": "Footer",
+                "label": "Continue",
+                "on-click-action": {
+                  "name": "data_exchange",
+                  "payload": {
+                    "account_number": "${form.account_number}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "CHOOSE_DESTINATION",
+      "title": "Where should we send the code?",
+      "data": {
+        "destinations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              }
+            }
+          },
+          "__example__": [
+            {
+              "id": "d1",
+              "title": "\u2022\u2022\u2022 \u2022\u2022\u2022 6655"
+            },
+            {
+              "id": "d2",
+              "title": "c\u2022\u2022\u2022@g\u2022\u2022\u2022.com"
+            }
+          ]
+        },
+        "has_destinations": {
+          "type": "boolean",
+          "__example__": false
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextBody",
+            "text": "We will send a code to the contact you choose. We show only part of it."
+          },
+          {
+            "type": "Form",
+            "name": "destination_form",
+            "children": [
+              {
+                "type": "RadioButtonsGroup",
+                "name": "destination_id",
+                "label": "Send the code to",
+                "required": true,
+                "data-source": "${data.destinations}"
+              },
+              {
+                "type": "Footer",
+                "label": "Send the code",
+                "on-click-action": {
+                  "name": "data_exchange",
+                  "payload": {
+                    "destination_id": "${form.destination_id}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "CODE",
+      "title": "Enter the code",
+      "data": {
+        "error_message": {
+          "type": "string",
+          "__example__": ""
+        },
+        "has_error_message": {
+          "type": "boolean",
+          "__example__": false
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextBody",
+            "text": "Enter the code we sent you. It expires in ten minutes."
+          },
+          {
+            "type": "TextCaption",
+            "text": "${data.error_message}",
+            "visible": "${data.has_error_message}"
+          },
+          {
+            "type": "Form",
+            "name": "code_form",
+            "children": [
+              {
+                "type": "TextInput",
+                "name": "code",
+                "label": "Code",
+                "input-type": "number",
+                "required": true
+              },
+              {
+                "type": "Footer",
+                "label": "Continue",
+                "on-click-action": {
+                  "name": "data_exchange",
+                  "payload": {
+                    "code": "${form.code}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "SET_PIN",
+      "title": "Choose your Transaction PIN",
+      "data": {
+        "error_message": {
+          "type": "string",
+          "__example__": ""
+        },
+        "has_error_message": {
+          "type": "boolean",
+          "__example__": false
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextBody",
+            "text": "Choose a 4-digit PIN. You enter it to approve a transfer."
+          },
+          {
+            "type": "TextCaption",
+            "text": "${data.error_message}",
+            "visible": "${data.has_error_message}"
+          },
+          {
+            "type": "Form",
+            "name": "pin_form",
+            "children": [
+              {
+                "type": "TextInput",
+                "name": "pin",
+                "label": "PIN",
+                "input-type": "number",
+                "required": true
+              },
+              {
+                "type": "TextInput",
+                "name": "pin_confirmation",
+                "label": "Enter the PIN again",
+                "input-type": "number",
+                "required": true
+              },
+              {
+                "type": "Footer",
+                "label": "Finish",
+                "on-click-action": {
+                  "name": "data_exchange",
+                  "payload": {
+                    "pin": "${form.pin}",
+                    "pin_confirmation": "${form.pin_confirmation}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "DONE",
+      "title": "Done",
+      "terminal": true,
+      "data": {
+        "message": {
+          "type": "string",
+          "__example__": "Your account is linked."
+        },
+        "has_message": {
+          "type": "boolean",
+          "__example__": false
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextBody",
+            "text": "${data.message}"
+          },
+          {
+            "type": "Footer",
+            "label": "Close",
+            "on-click-action": {
+              "name": "complete",
+              "payload": {}
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "LOCKED",
+      "title": "Too many attempts",
+      "terminal": true,
+      "data": {
+        "message": {
+          "type": "string",
+          "__example__": "Too many attempts. Try again in an hour."
+        },
+        "has_message": {
+          "type": "boolean",
+          "__example__": false
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextBody",
+            "text": "${data.message}"
+          },
+          {
+            "type": "Footer",
+            "label": "Close",
+            "on-click-action": {
+              "name": "complete",
+              "payload": {}
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "UNAVAILABLE",
+      "title": "Not available",
+      "terminal": true,
+      "data": {
+        "message": {
+          "type": "string",
+          "__example__": "We cannot do that just now. Please try again shortly."
+        },
+        "has_message": {
+          "type": "boolean",
+          "__example__": false
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextBody",
+            "text": "${data.message}"
+          },
+          {
+            "type": "Footer",
+            "label": "Close",
+            "on-click-action": {
+              "name": "complete",
+              "payload": {}
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

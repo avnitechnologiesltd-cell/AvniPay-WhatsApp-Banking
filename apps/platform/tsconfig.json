@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["src/**/*.test.ts"],
+  "references": [
+    { "path": "../../packages/config" },
+    { "path": "../../packages/db" },
+    { "path": "../../packages/intent" },
+    { "path": "../../packages/service" },
+    { "path": "../../packages/platform-channels" },
+    { "path": "../../packages/platform-orchestration" },
+    { "path": "../../packages/platform-support" }
+  ]
+}

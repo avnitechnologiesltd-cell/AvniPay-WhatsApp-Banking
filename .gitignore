@@ -1,0 +1,32 @@
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+# The directory itself is tracked — Compose mounts it, so a fresh clone needs
+# somewhere to put the .pem files. Its contents never are.
+secrets/*
+!secrets/.gitkeep
+*.pem
+*.key
+
+# Local scratch notes
+.scratch/
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+.next/
+*.tsbuildinfo
+
+# Local databases
+*.db
+*.sqlite
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/

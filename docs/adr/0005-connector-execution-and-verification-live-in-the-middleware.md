@@ -1,0 +1,19 @@
+# Connector execution and verification live in the Middleware
+
+The Bank registers Connectors at runtime: an endpoint, its credentials, a description, and a verification checkbox — **Verify User** when this was written, **Gated** since [ADR-0009](0009-a-gated-connector-takes-the-transaction-pin.md). The platform never learns what a registered API does or where it is hosted. Something must then send the HTTP request, and something must decide whether the Customer has verified. Both belong to the Middleware, on the Bank's infrastructure — never to the Platform, and never to the Support Agent.
+
+The Platform could call registered endpoints directly; it is the component holding the conversation, and the extra hop costs latency. We rejected that for two reasons. A Connector may point at BankOne, which [ADR-0002](0002-middleware-is-the-sole-path-to-bankone.md) reserves to the Middleware — and because the URL is opaque to us, a direct-calling Platform would breach that rule silently, discovered only in an audit. Separately, credentials the Bank pastes into a registration form must not come to rest in the Platform: the Platform is the component that feeds attacker-controlled text to an LLM, and a credential store inside that blast radius is the worst available placement ([ADR-0006](0006-secrets-and-security-records-live-outside-the-platform.md)).
+
+> **Corrected.** The second reason originally read "must not come to rest on vendor infrastructure: the Bank holds the licence, so the Bank holds the secrets." That is false — all three deployables run on the Bank's infrastructure. The conclusion is unchanged; see [ADR-0006](0006-secrets-and-security-records-live-outside-the-platform.md).
+
+> **Verify User is withdrawn; see [ADR-0009](0009-a-gated-connector-takes-the-transaction-pin.md).** The checkbox is now **Gated**, and it takes the Customer's Transaction PIN on every execution rather than three Bank-supplied security questions once per conversation. This ADR's own decision — that execution and the verification decision both belong to the Middleware — is unchanged and is in fact strengthened, since the Middleware already holds the hashed PIN. The paragraph below describes the superseded mechanism; its reasoning about *why the Support Agent must not judge* survives, and under Gated there is no relay step for it to get wrong.
+
+The verification decision is a separate question with the same answer. The Support Agent asks the security questions and relays the answers, but it does not judge the result. The Middleware checks for a verification record before dispatching a Verify User Connector, and the Support Agent is not consulted. This follows [ADR-0001](0001-no-ai-in-the-banking-layer.md) — an LLM resolves intent and never authorises — and it is forced by measurement rather than principle: the selected model's instruction-following is weak enough (see `docs/research/groq-model-selection.md`) that a Customer able to argue the AI into believing verification happened would own the account.
+
+## Consequences
+
+The Middleware becomes a general-purpose outbound HTTP client with a credential store, which is a materially larger surface than the fixed BankOne adapter ADR-0002 imagined. It needs credentials encrypted at rest, per-Connector timeouts and egress controls, and audit logging of every dispatch — otherwise a registration form becomes a way to make the Bank's own server call arbitrary hosts.
+
+Latency rises by one hop on every Connector call, and the Middleware becomes a hard dependency of the support path rather than only the banking path. Its availability now bounds the Support Agent's.
+
+The Bank gains the ability to add capability without a deploy from us, which is the point. They also gain the ability to misconfigure it, which the checkbox default and the ten-Connector warning only partly mitigate.
